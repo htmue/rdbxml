@@ -1,0 +1,3 @@
+require 'rake/contrib/rubyforgepublisher'
+
+Rake::RubyForgePublisher.new 'rdbxml', 'code_monkey'
