@@ -2,7 +2,7 @@ require 'rake'
 require 'rake/testtask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
-load 'build.rb'
+load 'build.rake'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
