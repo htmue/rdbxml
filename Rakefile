@@ -1,19 +1,23 @@
 require 'rake'
+require 'rake/clean'
+require 'rake/swigextensiontask'
 require 'rake/testtask'
+require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
-load 'build.rake'
+
+CLEAN.include 'test/*_test.db', 'ext/*_wrap.cc'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
   puts "Using DBXML installed in #{dbxml_dist}"
-  Build::ExtensionTask.env.update(
+  Rake::ExtensionTask.env.update(
     :swig_includedirs => [File.join( dbxml_dist, 'dbxml/dist/swig' ), '.'],
     :includedirs => File.join( dbxml_dist, 'install/include' ),
     :libdirs => File.join( dbxml_dist, 'install/lib' )
   )
 else
-  Build::ExtensionTask.env.update(
+  Rake::ExtensionTask.env.update(
     :includedirs => '/usr/local/include',
     :libdirs => '/usr/local/lib'
   )
@@ -25,21 +29,16 @@ desc "Build the interface extension"
 task :all => [:db, :dbxml]
 
 desc "Build the BDB interface extension"
-Build::SWIGExtensionTask.new :db do |t|
+Rake::SWIGExtensionTask.new :db do |t|
   t.dir = 'ext'
   t.link_libs += ['db', 'db_cxx']
 end
 
 desc "Build the BDBXML interface extension"
-Build::SWIGExtensionTask.new :dbxml do |t|
+Rake::SWIGExtensionTask.new :dbxml do |t|
   t.dir = 'ext'
   t.deps << 'dbxml_ruby.i'
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
-end
-
-task :clean do |t|
-  rm_rf Dir['test/*_test.db']
-  rm_f Dir['ext/*_wrap.cc']
 end
 
 task :test => [:db, :dbxml]
@@ -50,6 +49,15 @@ Rake::TestTask.new do |t|
 end
 
 task :install => [:test, :clean] do end
+
+
+rd = Rake::RDocTask.new('rdoc') { |rdoc|
+  rdoc.rdoc_dir = 'html'
+  rdoc.title    = "RDBXML -- An XML Database for Ruby"
+  rdoc.options << '--line-numbers' << '--inline-source' << '--main' << 'README'
+  rdoc.rdoc_files.include 'README', 'LICENSE'
+  rdoc.rdoc_files.include 'lib/**/*.rb'
+}
 
 
 GEM_VERSION = '0.1'
@@ -70,17 +78,22 @@ spec = Gem::Specification.new do |s|
   s.summary = 'Provides wrappers for the BDBXML (and BDB) C++ APIs, plus pure Ruby extensions'
   s.description = <<-END
   END
-  s.autorequire = 'rdbxml'
-  s.has_rdoc = false
-# s.extra_rdoc_files = ["README"]
   s.files = GEM_FILES.to_a.delete_if {|f| f.include?('.svn')}
-  s.test_files = Dir["*_test.rb"]
+  s.autorequire = 'rdbxml'
+  s.test_files = Dir["test/*_test.rb"]
   s.add_dependency 'rake', '> 0.7.0'
 
   s.extensions << './extconf.rb'
   s.require_paths << 'ext'
+
+  s.has_rdoc = true
+  s.extra_rdoc_files = rd.rdoc_files.reject { |fn| fn =~ /\.rb$/ }.to_a
+  s.rdoc_options = rd.options
 end
-Rake::GemPackageTask.new spec
+Rake::GemPackageTask.new spec  do |pkg|
+  pkg.need_zip = true
+  pkg.need_tar = true
+end
 
 desc "Build the gem package"
 task :gem => :package do

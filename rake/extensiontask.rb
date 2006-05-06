@@ -1,13 +1,8 @@
 require 'rake'
+require 'rake/clean'
 require 'rake/tasklib'
 
-module Build
-
-  desc "Remove all intermediate build files"
-  task :clean
-
-  desc "Remove all intermediate and output build files"
-  task :clobber
+module Rake
 
   class ExtensionTask < Rake::TaskLib
     attr_accessor :name, :lib_name, :dir, :env, :deps, :objs, :link_libs
@@ -46,9 +41,8 @@ module Build
                           {'-l' => link_libs}, :libs, :dlibs
       end
 
-      task :clean do |t|  rm_f output_objs  end
-      task :clobber => :clean do |t|  rm_f output_lib  end
-
+      CLEAN.include output_objs
+      CLOBBER.include output_lib
       define_rules
     end
 
@@ -133,36 +127,6 @@ module Build
       [task_name, deps]
     end
 
-  end
-
-
-  class SWIGExtensionTask < ExtensionTask
-    def set_defaults
-      @lib_name = (Symbol === name) ? "#{name}.#{env[:dlext]}" : name
-      @objs = ["#{name}_wrap".to_sym]
-      @deps = ["#{name}.i"]
-    end
-
-    def define_rules
-      verify_swig_version
-      Rake::Task.create_rule( '_wrap.cc' => [proc {|t| t.gsub /_wrap\.cc$/, '.i' }] )  do |r|
-        sh_cmd :swig, :swig_flags, {'-I' => :swig_includedirs}, {'-I' => :includedirs},
-                '-o', r.name, r.sources
-      end
-      super
-    end
-
-  protected
-
-    def verify_swig_version
-      @@swig_version ||= IO.popen "#{env[:swig]} -version 2>&1" do |swig|
-        banner = swig.readlines.reject { |l| l.strip.empty? }
-        banner[0].match(/SWIG Version ([^ ]+)/i)[1]
-      end
-      unless @@swig_version >= '1.3'
-        raise "Need SWIG version 1.3 or later (have #{@@swig_version[0]})"
-      end
-    end
   end
 
 end
