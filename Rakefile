@@ -23,10 +23,8 @@ else
   )
 end
 
-task :default => :all
-
 desc "Build the interface extension"
-task :all => [:db, :dbxml]
+task :extensions => [:db, :dbxml]
 
 desc "Build the BDB interface extension"
 Rake::SWIGExtensionTask.new :db do |t|
@@ -41,7 +39,7 @@ Rake::SWIGExtensionTask.new :dbxml do |t|
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
 end
 
-task :test => [:db, :dbxml]
+task :test => :extensions
 Rake::TestTask.new do |t|
   t.libs << "ext"
   t.test_files = FileList['test/*_test.rb']
@@ -50,15 +48,15 @@ end
 
 task :install => [:test, :clean] do end
 
-
-rd = Rake::RDocTask.new('rdoc') { |rdoc|
+rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_dir = 'html'
-  rdoc.title    = "RDBXML -- An XML Database for Ruby"
+  rdoc.title    = "RDBXML -- XML Databases for Ruby"
   rdoc.options << '--line-numbers' << '--inline-source' << '--main' << 'README'
-  rdoc.rdoc_files.include 'README', 'LICENSE'
+  rdoc.rdoc_files.include 'README', 'MIT-LICENSE'
   rdoc.rdoc_files.include 'lib/**/*.rb'
-}
-
+  rdoc.rdoc_files.include 'docs/**/*.rb', 'docs/**/*.rdoc'
+rdoc.rdoc_files.include 'rake/**/*.rb'
+end
 
 GEM_VERSION = '0.1'
 GEM_FILES = FileList[
@@ -100,5 +98,9 @@ task :gem => :package do
   system 'gem', 'query', File.join( 'pkg', spec.name + '.gem' )
 end
 
+task :default => :extensions
+task :all => :extensions
+
 #load 'publish.rf' if File.exist? 'publish.rf'
+
 
