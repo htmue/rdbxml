@@ -55,7 +55,6 @@ rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_files.include 'README', 'MIT-LICENSE'
   rdoc.rdoc_files.include 'lib/**/*.rb'
   rdoc.rdoc_files.include 'docs/**/*.rb', 'docs/**/*.rdoc'
-rdoc.rdoc_files.include 'rake/**/*.rb'
 end
 
 GEM_VERSION = '0.1'
