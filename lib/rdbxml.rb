@@ -43,9 +43,20 @@ class Dbxml::XmlManager
   def []( name )
     openContainer name.to_s, Dbxml::DB_CREATE
   end
+
+  def query( xquery, opts = {}, &block )
+    opts[:ctx] ||= createQueryContext
+    q = self.prepare xquery, opts[:ctx]
+    res = q.execute( opts[:ctx], 0 )
+#puts "#{xquery} -> #{res}"
+    res.each(block)  if block_given?
+    res
+  end
 end
 
 class Dbxml::XmlContainer
+  include Enumerable
+
   # Returns the document named +name+, or +nil+ if it doesn't exist.
   def []( name )
     begin
@@ -69,11 +80,53 @@ class Dbxml::XmlContainer
       updateDocument doc, ctx
     end
   end
+
+  # Iterates over each document in the collection
+  def each( &block )
+    getAllDocuments.each(block)
+  end
 end
 
 class Dbxml::XmlDocument
   # Returns the document XML as a string.
   def to_s
     getContentAsString
+  end
+end
+
+class Dbxml::XmlResults
+  include Enumerable
+
+  def each( &block )
+    self.reset
+    while self.hasNext
+      yield self.next
+    end
+  end
+
+  def first
+    self.reset
+    self.hasNext ? self.next : nil
+  end
+
+  def to_s
+    collect { |v| v.to_s }.join "\n"
+  end
+end
+
+class Dbxml::XmlValue
+  def to_s ;   self.asString ; end
+  def to_f ;   self.asNumber ; end
+  def to_i ;   self.to_f.to_i ; end
+  def to_doc ; self.asDocument ; end
+
+  def ==( that )
+    if isNumber
+      self.asNumber == that
+    elsif isBoolean
+      self.asBoolean == that
+    else
+      self.asString == that.to_s
+    end
   end
 end
