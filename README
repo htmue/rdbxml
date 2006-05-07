@@ -76,5 +76,7 @@ went back and started adding functionality.
 Please report any issues on the RDBXML Website[http://rubyforge.org/projects/rdbxml].
 
 Author::    Steve Sloan (mailto:steve@finagle.org)
+Website::   http://rdbxml.rubyforge.org
+Rubyforge:: http://rubyforge.org/projects/rdbxml
 Copyright:: Copyright (c) 2006 Steve Sloan
 License::   MIT
