@@ -1,3 +1,5 @@
 require 'rake/contrib/rubyforgepublisher'
 
-Rake::RubyForgePublisher.new 'rdbxml', 'code_monkey'
+task :publish => :rdoc  do |t|
+  Rake::RubyForgePublisher.new 'rdbxml', 'code_monkey'
+end

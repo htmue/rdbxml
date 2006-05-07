@@ -95,6 +95,6 @@ end
 task :default => :extensions
 task :all => :extensions
 
-#load 'publish.rf' if File.exist? 'publish.rf'
+load 'publish.rf' if File.exist? 'publish.rf'
 
 
