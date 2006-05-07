@@ -6,11 +6,9 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 
-CLEAN.include 'test/*_test.db', 'ext/*_wrap.cc'
-
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
-  puts "Using DBXML installed in #{dbxml_dist}"
+  puts "*** Using DBXML distribution in #{dbxml_dist}"
   Rake::ExtensionTask.env.update(
     :swig_includedirs => [File.join( dbxml_dist, 'dbxml/dist/swig' ), '.'],
     :includedirs => File.join( dbxml_dist, 'install/include' ),
@@ -25,6 +23,7 @@ end
 
 desc "Build the interface extension"
 task :extensions => [:db, :dbxml]
+CLEAN.include 'ext/*_wrap.cc'
 
 desc "Build the BDB interface extension"
 Rake::SWIGExtensionTask.new :db do |t|
@@ -44,6 +43,7 @@ Rake::TestTask.new do |t|
   t.libs << "ext"
   t.test_files = FileList['test/*_test.rb']
   t.verbose = true
+  CLEAN.include 'test/*_test.db'
 end
 
 task :install => [:test, :clean] do end
@@ -51,7 +51,7 @@ task :install => [:test, :clean] do end
 rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_dir = 'html'
   rdoc.title    = "RDBXML -- XML Databases for Ruby"
-  rdoc.options << '--line-numbers' << '--inline-source' << '--main' << 'README'
+  rdoc.options += ['--line-numbers', '--inline-source', '--main', 'README', '--exclude', 'ext/*.c*']
   rdoc.rdoc_files.include 'README', 'MIT-LICENSE'
   rdoc.rdoc_files.include 'lib/**/*.rb'
   rdoc.rdoc_files.include 'docs/**/*.rb', 'docs/**/*.rdoc'
@@ -59,12 +59,11 @@ rdoc.rdoc_files.include 'rake/**/*.rb'
 end
 
 GEM_VERSION = '0.1'
-GEM_FILES = FileList[
-  '[A-Z]*',
-  'build.rake',
-  'lib/**/*.rb',
+GEM_FILES = rd.rdoc_files + FileList[
+  'Rakefile',
   'ext/**/*.i',
-  'test/**/*_test.rb'
+  'rake/**/*.rb',
+  'test/**/*_test.rb',
 ]
 
 spec = Gem::Specification.new do |s|
@@ -91,11 +90,6 @@ end
 Rake::GemPackageTask.new spec  do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
-end
-
-desc "Build the gem package"
-task :gem => :package do
-  system 'gem', 'query', File.join( 'pkg', spec.name + '.gem' )
 end
 
 task :default => :extensions

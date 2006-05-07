@@ -29,6 +29,7 @@ module Rake
   # Author::    Steve Sloan (mailto:steve@finagle.org)
   # Copyright:: Copyright (c) 2006 Steve Sloan
   # License::   GPL
+
   class ExtensionTask < Rake::TaskLib
     # The name of the extension
     attr_accessor :name
