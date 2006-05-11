@@ -10,7 +10,7 @@ module Rake
   # from rbconfig (note: examples assume *nix file extensions).
   #
   # *Note*: Strings vs Symbols
-  # In places where filenames are expected (i.e. lib_name and objs), +String+s are used
+  # In places where filenames are expected (e.g. lib_name and objs), +String+s are used
   # as verbatim filenames, while, +Symbol+s have the platform-dependant extension
   # appended (e.g. '.so' for libraries and '.o' for objects).
   #
@@ -20,8 +20,6 @@ module Rake
   #   Rake::ExtensionTask.new :sample => :foo do |t|
   #     # all extension files under this directory
   #     t.dir = 'ext'
-  #     # don't include, but rebuild library if it changes
-  #     t.deps << 'config.h'
   #     # link libraries (libbar.so)
   #     t.link_libs << 'bar'
   #   end
@@ -40,10 +38,6 @@ module Rake
     # Object files to build and link into the extension.
     attr_accessor :objs
 
-    # Depency files that aren't linked into the library, but cause it to be
-    # rebuilt when they change.
-    attr_accessor :deps
-
     # The directory where the extension files (source, output, and
     # intermediate) are stored.
     attr_accessor :dir
@@ -54,20 +48,6 @@ module Rake
 
     # Additional link libraries
     attr_accessor :link_libs
-
-
-    # List of paths to object files to build
-    def output_objs
-      @objs.collect do |o|
-        f = (Symbol === o) ? "#{o}.#{env[:objext]}" : o
-        File.join( dir, f )
-      end
-    end
-
-    # Path to the output library file
-    def output_lib
-      File.join( dir, lib_name )
-    end
 
     # Same arguments as Rake::define_task
     def initialize( args, &blk )
@@ -83,21 +63,24 @@ module Rake
     #
     # Defaults:
     # - lib_name: name.so
-    # - objs: name.o
+    # - objs: name.o (<- name.{c,cxx,cpp,cc})
     # - dir: .
+    # - link_libs: <none>
     def set_defaults
-      @lib_name = (Symbol === name) ? "#{name}.#{env[:dlext]}" : name
+      @lib_name = name.to_sym
       @objs = [name.to_sym]
       @dir = '.'
-      @deps, @link_libs = [], []
+      @link_libs = []
     end
 
     # Defines the library task.
     def define_tasks
-      task name => (deps.collect { |d| File.join( dir, d ) } << output_lib)  do end
+      output_objs = @objs.collect { |obj| filepath obj, :objext }
+      output_lib = filepath lib_name, :dlext
 
-      file output_lib => output_objs  do |t|
-        sh_cmd :ldshared, {'-L' => :libdirs}, '-o', t.name, t.prerequisites,
+      task name => output_lib  do end
+      file output_lib => output_objs do |t|
+        sh_cmd :ldshared, {'-L' => :libdirs}, '-o', output_lib, output_objs,
                           {'-l' => link_libs}, :libs, :dlibs
       end
 
@@ -132,13 +115,8 @@ module Rake
       @@DefaultEnv = {
         :cxx => ENV['CXX'] || 'c++',
         :cxxflags => ENV['CXXFLAGS'] || '',
-
         :c_exts => ['c'],
         :cpp_exts => ['cc', 'cxx', 'cpp'],
-        :swig => 'swig',
-        :swig_flags => ['-ruby', '-c++'],
-        :swig_includedirs => ['.'],
-
         :includedirs => [], #['/usr/local/include'],
         :libdirs => [], #['/usr/local/lib'],
       }
@@ -146,6 +124,11 @@ module Rake
     end
 
   protected
+
+    def filepath( f, ext )
+      ext = env[ext]  if Symbol === ext
+      Symbol === f ? File.join( dir, "#{f}.#{ext}" ) : f
+    end
 
     # Convenience function for cnstructing command lines for build tools.
     def optify( *opts )

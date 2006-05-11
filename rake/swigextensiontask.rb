@@ -13,8 +13,6 @@ module Rake
   #   Rake::SWIGExtensionTask.new :dbxml do |t|
   #     # keep it all under ext/
   #     t.dir = 'ext'
-  #     # dbxml.i includes dbxml_ruby.i -- rebuild if it changes
-  #     t.deps << 'dbxml_ruby.i'
   #     # link in dbxml libraries
   #     t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
   #   end
@@ -25,25 +23,44 @@ module Rake
   class SWIGExtensionTask < ExtensionTask
     # Defaults:
     # - lib_name: name.so
-    # - objs: name_wrap.o
-    # - deps: name.i
+    # - ifaces: name.i
     # - dir: .
+    # - link_libs: <none>
     def set_defaults
       super
-      @lib_name = (Symbol === name) ? "#{name}.#{env[:dlext]}" : name
-      @objs = ["#{name}_wrap".to_sym]
-      @deps = ["#{name}.i"]
+      @objs = []
+      @ifaces = [name.to_sym]
+    end
+
+    def define_tasks
+      for iface in @ifaces
+        iface = filepath(iface, :swigext)
+        src = iface.sub(/\.#{env[:swigext]}$/, env[:swig_cppext])
+        @objs << src.sub(/\.[^.]+$/, '.'+env[:objext])
+       CLEAN.include src
+      end
+      super
     end
 
     # Add rule for generating C++ wrapper code (_wrap.cc) from SWIG interface definition (.i).
     def define_rules
       verify_swig_version
-      Rake::Task.create_rule( '_wrap.cc' => [proc {|t| t.gsub /_wrap\.cc$/, '.i' }] )  do |r|
+      super
+      Rake::Task.create_rule(
+        /#{env[:swig_cppext]}$/ => [proc {|t| t.sub /#{env[:swig_cppext]}$/, '.'+env[:swigext] }]
+      )  do |r|
         sh_cmd :swig, :swig_flags, {'-I' => :swig_includedirs}, {'-I' => :includedirs},
                 '-o', r.name, r.sources
       end
-      super
     end
+
+    ExtensionTask.env.update(
+      :swig => 'swig',
+      :swigext => 'i',
+      :swig_cppext => '_wrap.cc',
+      :swig_flags => ['-ruby', '-c++'],
+      :swig_includedirs => ['.']
+    )
 
   protected
 

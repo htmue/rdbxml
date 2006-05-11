@@ -57,6 +57,8 @@ end
 class Dbxml::XmlContainer
   include Enumerable
 
+  alias manager getManager
+
   # Returns the document named +name+, or +nil+ if it doesn't exist.
   def []( name )
     begin
@@ -67,17 +69,31 @@ class Dbxml::XmlContainer
     end
   end
 
-  # Creates/updates the document named +name+ with the string +content+.
+  # Creates/updates the document named +name+ with +content+ (either String or XmlDocument).
   def []=( name, content )
+    doc = nil
+    if String === content
+      doc = manager.createDocument
+      doc.name = name
+      doc.content = content
+    elsif content.kind_of? XmlDocument
+      doc = content
+    else
+      raise ArgumentError, "content must be a String or XmlDocument"
+    end
+    self << doc
+  end
+
+  # Creates/updates the document +doc+.
+  def <<( doc )
     ctx = getManager.createUpdateContext
     begin
-      putDocument name, content, ctx, 0
+      putDocument doc, ctx, 0
     rescue XmlException => ex
       raise unless ex.to_s =~ /document exists/i
-      doc = getManager.createDocument
-      doc.setName name
-      doc.setContent content
-      updateDocument doc, ctx
+      d = self[doc.name]
+      d.content = doc.content
+      updateDocument d, ctx
     end
   end
 
@@ -88,10 +104,48 @@ class Dbxml::XmlContainer
 end
 
 class Dbxml::XmlDocument
-  # Returns the document XML as a string.
-  def to_s
-    getContentAsString
+  alias to_s getContentAsString
+  alias name getName
+  alias name= setName
+  alias content getContent
+  alias content= setContent
+
+  class MetaData
+    include Enumerable
+
+    def initialize(doc)
+      @doc = doc
+    end
+
+    def [](name, uri = '')
+      @doc.getMetaData( uri, name.to_s )
+    end
+
+    def []=(name, uri = nil, val = nil)
+      uri ||= ''
+      if val
+        @doc.setMetaData( uri, name.to_s, XmlValue.new(val) )
+      else
+        @doc.removeMetaData( uri, name )
+      end
+    end
+
+    def delete(name, uri = '')
+      self[name, uri] = nil
+    end
+
+    def each(&block)
+      i = @doc.getMetaDataIterator
+      while (xmd = i.next)
+        yield xmd.get_name, xmd.get_value, xmd.get_uri
+      end
+    end
   end
+
+  def meta
+    @Meta ||= MetaData.new(self)
+  end
+
 end
 
 class Dbxml::XmlResults

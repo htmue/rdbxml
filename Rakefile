@@ -23,7 +23,6 @@ end
 
 desc "Build the interface extension"
 task :extensions => [:db, :dbxml]
-CLEAN.include 'ext/*_wrap.cc'
 
 desc "Build the BDB interface extension"
 Rake::SWIGExtensionTask.new :db do |t|
@@ -34,16 +33,15 @@ end
 desc "Build the BDBXML interface extension"
 Rake::SWIGExtensionTask.new :dbxml do |t|
   t.dir = 'ext'
-  t.deps << 'dbxml_ruby.i'
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
 end
 
 task :test => :extensions
 Rake::TestTask.new do |t|
   t.libs << "ext"
-  t.test_files = FileList['test/*_test.rb']
+  t.test_files = FileList['test/test_*.rb']
   t.verbose = true
-  CLEAN.include 'test/*_test.db'
+  CLEAN.include 'test/test_*.db'
 end
 
 task :install => [:test, :clean] do end
@@ -57,12 +55,12 @@ rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_files.include 'docs/**/*.rb', 'docs/**/*.rdoc'
 end
 
-GEM_VERSION = '0.1'
+GEM_VERSION = '0.2'
 GEM_FILES = rd.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',
   'rake/**/*.rb',
-  'test/**/*_test.rb',
+  'test/**/test_*.rb',
 ]
 
 spec = Gem::Specification.new do |s|
@@ -76,7 +74,7 @@ spec = Gem::Specification.new do |s|
   END
   s.files = GEM_FILES.to_a.delete_if {|f| f.include?('.svn')}
   s.autorequire = 'rdbxml'
-  s.test_files = Dir["test/*_test.rb"]
+  s.test_files = Dir["test/test_*.rb"]
   s.add_dependency 'rake', '> 0.7.0'
 
   s.extensions << './extconf.rb'

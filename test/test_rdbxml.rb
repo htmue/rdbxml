@@ -26,6 +26,18 @@ class XmlContainerTest < Test::Unit::TestCase
     assert_equal doc.to_s, @content
   end
 
+  def test_append_get_document
+    assert_not_nil @docs
+
+    doc = @db.createDocument
+    doc.name, doc.content = @doc_name, @content
+    @docs << doc
+
+    doc = @docs[@doc_name]
+    assert_not_nil doc
+    assert_equal doc.to_s, @content
+  end
+
   def test_update_document
     assert_not_nil @docs
 
@@ -42,6 +54,30 @@ class XmlContainerTest < Test::Unit::TestCase
     ctx = @db.createQueryContext
     q = @db.prepare xq, ctx
     res = q.execute ctx, 0
+  end
+end
+
+
+class XmlDocumentTest < Test::Unit::TestCase
+  def setup
+    @dir = File.join( File.dirname(__FILE__), File.basename(__FILE__, '.rb') + '.db' )
+    Dir.mkdir @dir  unless File.exists? @dir
+    @env = RDBXML::env(@dir)
+    @db = RDBXML::XmlManager.new @env, 0
+    @docs = @db['test']
+  end
+
+  def test_metadata
+    doc = @db.createDocument
+    doc.name = "Test#{rand(10000)}"
+    doc.content = '<test>This is a test</test>'
+    doc.meta['created_at', 'http://nowhere.invalid/namespaces/foo'] = Time.now.to_s
+    @docs << doc
+
+    doc = @docs[doc.name]
+    doc.meta.each do |name, val, uri|
+      assert ['created_at', 'name'].include?(name)
+    end
   end
 end
 
