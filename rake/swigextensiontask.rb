@@ -13,6 +13,8 @@ module Rake
   #   Rake::SWIGExtensionTask.new :dbxml do |t|
   #     # keep it all under ext/
   #     t.dir = 'ext'
+  #     # dbxml.i includes dbxml_ruby.i so rebuild if it changes
+  #     t.deps[:dbxml] << :dbxml_ruby
   #     # link in dbxml libraries
   #     t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
   #   end
@@ -21,6 +23,16 @@ module Rake
   # Copyright:: Copyright (c) 2006 Steve Sloan
   # License::   GPL
   class SWIGExtensionTask < ExtensionTask
+
+    # An Array of interface filenames (Symbol or String) to build and link into
+    # the extension.
+    attr_accessor :ifaces
+
+    # A Hash with keys of interface filenames and values of interface filenames
+    # which are not built or linked, but cause the corresponding interface to be
+    # rebuild if it changes.
+    attr_accessor :deps
+
     # Defaults:
     # - lib_name: name.so
     # - ifaces: name.i
@@ -30,14 +42,22 @@ module Rake
       super
       @objs = []
       @ifaces = [name.to_sym]
-    end
+      @deps = Hash.new []
+   end
 
     def define_tasks
       for iface in @ifaces
+        deps = @deps[iface]
         iface = filepath(iface, :swigext)
         src = iface.sub(/\.#{env[:swigext]}$/, env[:swig_cppext])
+
+        deps = [deps]  unless deps.kind_of? Enumerable
+        if deps and deps.any?
+          file src => deps.collect { |dep| filepath(dep, :swigext) } << iface
+        end
+        CLEAN.include src
+
         @objs << src.sub(/\.[^.]+$/, '.'+env[:objext])
-       CLEAN.include src
       end
       super
     end
