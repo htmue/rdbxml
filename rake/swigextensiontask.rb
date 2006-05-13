@@ -40,9 +40,9 @@ module Rake
     # - link_libs: <none>
     def set_defaults
       super
-      @objs = []
-      @ifaces = [name.to_sym]
-      @deps = Hash.new []
+      @objs ||= []
+      @ifaces ||= [name.to_sym]
+      @deps ||= Hash.new []
    end
 
     def define_tasks

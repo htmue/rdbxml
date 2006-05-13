@@ -67,10 +67,10 @@ module Rake
     # - dir: .
     # - link_libs: <none>
     def set_defaults
-      @lib_name = name.to_sym
-      @objs = [name.to_sym]
-      @dir = '.'
-      @link_libs = []
+      @lib_name ||= name.to_sym
+      @objs ||= [name.to_sym]
+      @dir ||= '.'
+      @link_libs ||= []
     end
 
     # Defines the library task.
