@@ -71,9 +71,8 @@ spec = Gem::Specification.new do |s|
   s.version = GEM_VERSION
   s.date = Date.today.to_s
   s.authors = ["Steve Sloan"]
-  s.summary = 'Provides wrappers for the BDBXML (and BDB) C++ APIs, plus pure Ruby extensions'
-  s.description = <<-END
-  END
+  s.summary = 'Provides wrappers for the BDB XML C++ APIs, plus pure Ruby extensions'
+#  s.description =
   s.files = GEM_FILES.to_a.delete_if {|f| f.include?('.svn')}
   s.autorequire = 'rdbxml'
   s.test_files = Dir["test/test_*.rb"]
