@@ -1,6 +1,27 @@
 %module dbxml
 %include "std_string.i"
 
+%alias XmlManager::createQueryContext "create_query_context";
+
+%alias XmlContainer::getManager "manager";
+
+%alias XmlDocument::getContentAsString "to_s";
+%alias XmlDocument::getName "name";
+%alias XmlDocument::setName "name=";
+%alias XmlDocument::getContent "content";
+%alias XmlDocument::setContent "content=";
+
+%alias XmlQueryContext::getNamespace "get_namespace";
+%alias XmlQueryContext::setNamespace "set_namespace";
+%alias XmlQueryContext::getDefaultCollection "default_collection";
+%alias XmlQueryContext::setDefaultCollection "default_collection=";
+%alias XmlQueryContext::getVariableValue "[]";
+%alias XmlQueryContext::setVariableValue "[]=";
+
+%alias XmlValue::asString "to_s";
+%alias XmlValue::asNumber "to_f";
+%alias XmlValue::asDocument "to_doc";
+
 %exception {
   try {
     $action

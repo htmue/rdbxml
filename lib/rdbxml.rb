@@ -38,26 +38,94 @@ module RDBXML
   end
 end
 
-class Dbxml::XmlManager
-  # Opens the container named +name+, creating it if it doesn't exist.
-  def []( name )
-    openContainer name.to_s, Dbxml::DB_CREATE
+class Dbxml::XmlValue
+  def to_i ;   self.to_f.to_i ; end
+
+  def ==( that )
+    if isNumber
+      self.asNumber == that
+    elsif isBoolean
+      self.asBoolean == that
+    else
+      self.asString == that.to_s
+    end
+  end
+end
+
+class Dbxml::XmlResults
+  include Enumerable
+
+  def each( &block )
+    self.reset
+    while self.hasNext
+      yield self.next
+    end
   end
 
-  def query( xquery, opts = {}, &block )
-    opts[:ctx] ||= createQueryContext
-    q = self.prepare xquery, opts[:ctx]
-    res = q.execute( opts[:ctx], 0 )
-#puts "#{xquery} -> #{res}"
-    res.each(block)  if block_given?
-    res
+  def first
+    self.reset
+    self.hasNext ? self.next : nil
   end
+
+  def to_s
+    collect { |v| v.to_s }.join "\n"
+  end
+end
+
+class Dbxml::XmlDocument
+  @@namespaces = {}
+
+  class MetaData
+    include Enumerable
+
+    def initialize(doc)
+      @doc = doc
+    end
+
+    def [](name, ns = '')
+      v = XmlValue.new
+      @doc.getMetaData( ns, name.to_s, v ) ? v : nil
+    end
+
+    def []=(name, *args)
+      opts = {}
+      val = args.pop
+      ns = args.shift || ''
+      if val
+        @doc.setMetaData ns, name.to_s, XmlValue.new(val)
+      else
+        delete name, ns
+      end
+    end
+
+    def delete(name, ns = '')
+#puts "removeMetaData: #{name.inspect}, #{ns.inspect}"
+      @doc.removeMetaData ns, name.to_s
+    end
+
+    def each(&block)
+      i = @doc.getMetaDataIterator
+      while (xmd = i.next)
+        yield xmd.get_name.to_sym, xmd.get_value, xmd.get_uri
+      end
+    end
+
+    def size
+      s = 0
+      i = @doc.getMetaDataIterator
+      while i.next  do  s += 1  end
+      s
+    end
+  end
+
+  def meta
+    @Meta ||= MetaData.new(self)
+  end
+
 end
 
 class Dbxml::XmlContainer
   include Enumerable
-
-  alias manager getManager
 
   # Returns the document named +name+, or +nil+ if it doesn't exist.
   def []( name )
@@ -103,84 +171,18 @@ class Dbxml::XmlContainer
   end
 end
 
-class Dbxml::XmlDocument
-  alias to_s getContentAsString
-  alias name getName
-  alias name= setName
-  alias content getContent
-  alias content= setContent
-
-  class MetaData
-    include Enumerable
-
-    def initialize(doc)
-      @doc = doc
-    end
-
-    def [](name, uri = '')
-      @doc.getMetaData( uri, name.to_s )
-    end
-
-    def []=(name, uri = nil, val = nil)
-      uri ||= ''
-      if val
-        @doc.setMetaData( uri, name.to_s, XmlValue.new(val) )
-      else
-        @doc.removeMetaData( uri, name )
-      end
-    end
-
-    def delete(name, uri = '')
-      self[name, uri] = nil
-    end
-
-    def each(&block)
-      i = @doc.getMetaDataIterator
-      while (xmd = i.next)
-        yield xmd.get_name, xmd.get_value, xmd.get_uri
-      end
-    end
+class Dbxml::XmlManager
+  # Opens the container named +name+, creating it if it doesn't exist.
+  def []( name )
+    openContainer name.to_s, Dbxml::DB_CREATE
   end
 
-  def meta
-    @Meta ||= MetaData.new(self)
-  end
-
-end
-
-class Dbxml::XmlResults
-  include Enumerable
-
-  def each( &block )
-    self.reset
-    while self.hasNext
-      yield self.next
-    end
-  end
-
-  def first
-    self.reset
-    self.hasNext ? self.next : nil
-  end
-
-  def to_s
-    collect { |v| v.to_s }.join "\n"
-  end
-end
-
-class Dbxml::XmlValue
-  def to_s ;   self.asString ; end
-  def to_f ;   self.asNumber ; end
-  def to_i ;   self.to_f.to_i ; end
-  def to_doc ; self.asDocument ; end
-
-  def ==( that )
-    if isNumber
-      self.asNumber == that
-    elsif isBoolean
-      self.asBoolean == that
-    else
-      self.asString == that.to_s
-    end
+  def query( xquery, opts = {}, &block )
+    opts[:ctx] ||= create_query_context
+    q = self.prepare xquery, opts[:ctx]
+    res = q.execute( opts[:ctx], 0 )
+#puts "#{xquery} -> #{res}"
+    res.each(block)  if block_given?
+    res
   end
 end

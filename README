@@ -2,8 +2,8 @@
 
 This package provides wrapper functions to the C++ APIS for BDB XML (Dbxml) and
 BDB (Db) as well as pure-Ruby convenience functions (RDBXML).  While the wrapper
-layer should be more or less complete, the Ruby interface only supports basic
-documents operations in this version of the library.
+layer should be more or less complete, the Ruby interface is still a work in
+progress.
 
 == Requirements
 * Rake[http://rake.rubyforge.org] >= 7.0
@@ -14,7 +14,7 @@ documents operations in this version of the library.
 === The Easy Way
 
 RDBXML is distributed as a Ruby Gem for easy installation, e.g.
-    sudo gem install rdbxml
+  sudo gem install rdbxml
 
 This will attempt to find the DBXML libaries/headers in the standard paths (plus
 /usr/local/) and will use the interface files taken from the dbxml-2.2.13
@@ -39,10 +39,11 @@ Sleepycat[http://dev.sleepycat.com/downloads/releasehistorybdbxml.html]), e.g.:
   sudo ldconfig
 
 This will ensure that you have the correct versions of the various BDB and
-BDBXML libraries, as well as the current SWIG Interface definitions included in the
+BDBXML libraries, as well as the current SWIG Interface definitions included in
 the DBXML distribution.
 
-You then pass the location of the (built) DBXML distribution to the RDBXML build system:
+You then pass the location of the (built) DBXML distribution to the RDBXML build
+system:
   DBXML_DIST=/tmp/dbxml-2.2.13 sudo gem install rdbxml
 
 This will build, test, and install the RDBXML gem.
@@ -68,12 +69,9 @@ This will build, test, and install the RDBXML gem.
 
 == Disclaimer
 
-This is an *alpha* relesae, intended to test the build system and the BDBXML API
-wrappers.  The Ruby-style interface is not yet terribly useful (you can read and
-write whole documents), but I wanted to get this basic version released before I
-went back and started adding functionality.
-
-Please report any issues on the RDBXML Website[http://rubyforge.org/projects/rdbxml].
+This release is still far from feature completeness, and is primarily
+intended to test the build system and the BDBXML API wrappers.  Please report
+any issues on the RDBXML Website[http://rubyforge.org/projects/rdbxml].
 
 Author::    Steve Sloan (mailto:steve@finagle.org)
 Website::   http://rdbxml.rubyforge.org

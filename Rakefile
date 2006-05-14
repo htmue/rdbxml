@@ -33,6 +33,7 @@ end
 desc "Build the BDBXML interface extension"
 Rake::SWIGExtensionTask.new :dbxml do |t|
   t.dir = 'ext'
+  t.deps[:dbxml] << :dbxml_ruby
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
 end
 
@@ -53,9 +54,10 @@ rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_files.include 'README', 'MIT-LICENSE'
   rdoc.rdoc_files.include 'lib/**/*.rb'
   rdoc.rdoc_files.include 'docs/**/*.rb', 'docs/**/*.rdoc'
+  rdoc.rdoc_files.include 'rake/**/*task.rb'
 end
 
-GEM_VERSION = '0.2'
+GEM_VERSION = '0.5'
 GEM_FILES = rd.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',
