@@ -10,9 +10,10 @@ module Rake
   # from rbconfig (note: examples assume *nix file extensions).
   #
   # *Note*: Strings vs Symbols
-  # In places where filenames are expected (e.g. lib_name and objs), +String+s are used
-  # as verbatim filenames, while, +Symbol+s have the platform-dependant extension
-  # appended (e.g. '.so' for libraries and '.o' for objects).
+  # In places where filenames are expected (e.g. lib_name and objs), Strings are used
+  # as verbatim filenames, while, Symbols have the platform-dependant extension
+  # appended (e.g. '.so' for libraries and '.o' for objects).  Also, only Symbols
+  # have #dir prepended to them.
   #
   # Example:
   #   desc "build sample extension"
@@ -81,7 +82,7 @@ module Rake
       task name => output_lib  do end
       file output_lib => output_objs do |t|
         sh_cmd :ldshared, {'-L' => :libdirs}, '-o', output_lib, output_objs,
-                          {'-l' => link_libs}, :libs, :dlibs
+                          {'-l' => link_libs}, :libs #, :dldlibs, :librubyarg_shared
       end
 
       CLEAN.include output_objs
@@ -117,14 +118,17 @@ module Rake
         :cxxflags => ENV['CXXFLAGS'] || '',
         :c_exts => ['c'],
         :cpp_exts => ['cc', 'cxx', 'cpp'],
-        :includedirs => [], #['/usr/local/include'],
-        :libdirs => [], #['/usr/local/lib'],
+        :includedirs => [],
+        :libdirs => [],
       }
       Config::CONFIG.each { |k, v| @@DefaultEnv[k.downcase.to_sym] = v }
     end
 
   protected
 
+    # Handles convenience filenames:
+    # * f (String) => f
+    # * f (Symbol) => dir/f.ext
     def filepath( f, ext )
       ext = env[ext]  if Symbol === ext
       Symbol === f ? File.join( dir, "#{f}.#{ext}" ) : f

@@ -4,7 +4,7 @@ require 'rake/extensiontask'
 module Rake
 
   # Create a build task that will generate a Ruby wrapper extension from
-  # a SWIG interface definition.  Requires SWIG[http://www.swig.org] version 1.3.x.
+  # SWIG interface definition(s).  Requires SWIG[http://www.swig.org] version 1.3.x.
   #
   # See ExtensionTask for more information.
   #
@@ -28,14 +28,15 @@ module Rake
     # the extension.
     attr_accessor :ifaces
 
-    # A Hash with keys of interface filenames and values of interface filenames
-    # which are not built or linked, but cause the corresponding interface to be
-    # rebuild if it changes.
+    # A Hash of interface filenames and their dependencies, i.e. files which
+    # are not built or linked, but cause the corresponding interface to be
+    # rebuild if any of them change.
     attr_accessor :deps
 
     # Defaults:
     # - lib_name: name.so
     # - ifaces: name.i
+    # - deps: <none>
     # - dir: .
     # - link_libs: <none>
     def set_defaults
