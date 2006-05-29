@@ -6,6 +6,8 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 
+GEM_VERSION = '0.5.1'
+
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
   puts "*** Using DBXML distribution in #{dbxml_dist}"
@@ -57,7 +59,6 @@ rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_files.include 'rake/**/*task.rb'
 end
 
-GEM_VERSION = '0.5'
 GEM_FILES = rd.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',

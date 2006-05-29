@@ -55,6 +55,20 @@ class XmlValueTest < Test::Unit::TestCase
   end
 end
 
+class XmlQueryContextTest < Test::Unit::TestCase
+  def setup
+    @db = RDBXML::XmlManager.new
+    @q = @db.create_query_context
+  end
+
+  def test_get_set_variable
+    @q[:foo] = 'xyz'
+    assert_equal 'xyz', @q[:foo].to_s
+    assert_equal 'xyz', @db.query('$foo', :ctx => @q).to_s
+  end
+
+end
+
 class XmlResultsTest < Test::Unit::TestCase
   def setup
     @db = RDBXML::XmlManager.new
@@ -93,8 +107,8 @@ class XmlDocumentTest < Test::Unit::TestCase
   def setup
     @dir = File.join( File.dirname(__FILE__), File.basename(__FILE__, '.rb') + '.db' )
     Dir.mkdir @dir  unless File.exists? @dir
-    @env = RDBXML::env(@dir)
-    @db = RDBXML::XmlManager.new @env, 0
+    @env = RDBXML::env @dir
+    @db = @env.manager
     @docs = @db['test']
   end
 

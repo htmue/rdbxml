@@ -72,6 +72,15 @@ class Dbxml::XmlResults
   end
 end
 
+class Dbxml::XmlQueryContext
+  def []( name )
+    getVariableValue name.to_s
+  end
+  def []=( name, val )
+    setVariableValue name.to_s, Dbxml::XmlValue.new(val)
+  end
+end
+
 class Dbxml::XmlDocument
   @@namespaces = {}
 
@@ -92,7 +101,7 @@ class Dbxml::XmlDocument
       val = args.pop
       ns = args.shift || ''
       if val
-        @doc.setMetaData ns, name.to_s, XmlValue.new(val)
+        @doc.setMetaData ns, name.to_s, Dbxml::XmlValue.new(val)
       else
         delete name, ns
       end
@@ -131,8 +140,8 @@ class Dbxml::XmlContainer
   def []( name )
     begin
       getDocument name.to_s
-    rescue XmlException => ex
-      raise unless ex.to_s =~ /document not found/i
+    rescue Dbxml::XmlException => ex
+      raise unless ex.err == XmlException::DOCUMENT_NOT_FOUND
       nil
     end
   end
@@ -157,8 +166,8 @@ class Dbxml::XmlContainer
     ctx = getManager.createUpdateContext
     begin
       putDocument doc, ctx, 0
-    rescue XmlException => ex
-      raise unless ex.to_s =~ /document exists/i
+    rescue Dbxml::XmlException => ex
+      raise unless ex.err == XmlException::UNIQUE_ERROR
       d = self[doc.name]
       d.content = doc.content
       updateDocument d, ctx
@@ -184,5 +193,11 @@ class Dbxml::XmlManager
 #puts "#{xquery} -> #{res}"
     res.each(block)  if block_given?
     res
+  end
+end
+
+class Db::DbEnv
+  def manager
+    Dbxml::XmlManager.new self, 0
   end
 end
