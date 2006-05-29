@@ -38,9 +38,18 @@ module RDBXML
   end
 end
 
+# Wraps and extends the XmlValue[http://www.sleepycat.com/xmldocs/api_cxx/XmlValue.html] class.
+# === Aliases:
+# to_s::   asString
+# to_f::   asNumber
+# to_doc:: asDocument (XmlDocument)
+# to_i::   #to_f
 class Dbxml::XmlValue
-  def to_i ;   self.to_f.to_i ; end
+  def to_i # :nodoc:
+    self.to_f.to_i
+  end
 
+  # Handles Numeric/Boolean/String comparisons
   def ==( that )
     if isNumber
       self.asNumber == that
@@ -52,42 +61,71 @@ class Dbxml::XmlValue
   end
 end
 
+# Wraps the XmlResults[http://www.sleepycat.com/xmldocs/api_cxx/XmlResults_list.html] class as an
+# enumerable collection of XmlValue or XmlDocument.
 class Dbxml::XmlResults
   include Enumerable
 
-  def each( &block )
+  # Iterates across each result (as an XmlValue) in the set
+  def each( &block ) # :yields: value
     self.reset
     while self.hasNext
       yield self.next
     end
   end
 
+  # Iterates across each result (as an XmlDocument) in the set
+  def each_doc( &block ) # :yields: document
+    self.reset
+    while self.hasNext
+      yield self.nextDocument
+    end
+  end
+
+  # Returns the first result as an XmlValue(or +nil+)
   def first
     self.reset
     self.hasNext ? self.next : nil
   end
 
+  # Returns the first result as an XmlDocument (or +nil+)
+  def first_doc
+    self.reset
+    self.hasNext ? self.nextDocument : nil
+  end
+
+  # Returns the result set as +newline+-joined strings
   def to_s
     collect { |v| v.to_s }.join "\n"
   end
 end
 
+# Wraps and extends the XmlQueryContext[http://www.sleepycat.com/xmldocs/api_cxx/XmlQueryContext_list.html] class.
+# === Aliases
+# namespace::   getNamespace/setNamespace[http://www.sleepycat.com/xmldocs/api_cxx/XmlQueryContext_setNamespace.html]
+# collection::  getDefaultCollection/setDefaultCollection[http://www.sleepycat.com/xmldocs/api_cxx/XmlQueryContext_setDefaultCollection.html]
 class Dbxml::XmlQueryContext
+  # XmlQueryContext::getVariableValue[http://www.sleepycat.com/xmldocs/api_cxx/XmlQueryContext_setVariableValue.html]
   def []( name )
     getVariableValue name.to_s
   end
-  def []=( name, val )
+  # XmlQueryContext::setVariableValue[http://www.sleepycat.com/xmldocs/api_cxx/XmlQueryContext_setVariableValue.html]
+  def []=( name, val ) # :nodoc:
     setVariableValue name.to_s, Dbxml::XmlValue.new(val)
   end
 end
 
+# Wraps and extends the XmlDocument[http://www.sleepycat.com/xmldocs/api_cxx/XmlDocument_list.html] class.
+# === Aliases:
+# name:: getName/setName[http://www.sleepycat.com/xmldocs/api_cxx/XmlDocument_setName.html]
+# content:: getContent/setContent[http://www.sleepycat.com/xmldocs/api_cxx/XmlDocument_getContent.html]
+# to_s:: #content
 class Dbxml::XmlDocument
-  @@namespaces = {}
-
+  # Represents the document metadata as an Enumerable collection
   class MetaData
     include Enumerable
 
-    def initialize(doc)
+    def initialize(doc)  #:nodoc:
       @doc = doc
     end
 
@@ -112,7 +150,7 @@ class Dbxml::XmlDocument
       @doc.removeMetaData ns, name.to_s
     end
 
-    def each(&block)
+    def each(&block) # :yields: name, value, uri
       i = @doc.getMetaDataIterator
       while (xmd = i.next)
         yield xmd.get_name.to_sym, xmd.get_value, xmd.get_uri
@@ -127,12 +165,16 @@ class Dbxml::XmlDocument
     end
   end
 
+  # Returns the document metadata[http://www.sleepycat.com/xmldocs/api_cxx/XmlDocument_getMetaData.html]
   def meta
     @Meta ||= MetaData.new(self)
   end
 
 end
 
+# Wraps and extends the XmlContainer[http://www.sleepycat.com/xmldocs/api_cxx/XmlContainer_list.html] class.
+# === Aliases
+# manager:: getManager[http://www.sleepycat.com/xmldocs/api_cxx/XmlContainer_getManager.html]
 class Dbxml::XmlContainer
   include Enumerable
 
@@ -161,7 +203,7 @@ class Dbxml::XmlContainer
     self << doc
   end
 
-  # Creates/updates the document +doc+.
+  # Creates/updates the XmlDocument +doc+.
   def <<( doc )
     ctx = getManager.createUpdateContext
     begin
@@ -174,19 +216,24 @@ class Dbxml::XmlContainer
     end
   end
 
-  # Iterates over each document in the collection
-  def each( &block )
+  # Iterates over each XmlDocument in the collection
+  def each( &block ) # :yields: document
     getAllDocuments.each(block)
   end
 end
 
+# Wraps and extends the XmlManager[http://www.sleepycat.com/xmldocs/api_cxx/XmlManager_list.html] class.
+# === Aliases
+# create_query_context:: createQueryContext
 class Dbxml::XmlManager
   # Opens the container named +name+, creating it if it doesn't exist.
   def []( name )
     openContainer name.to_s, Dbxml::DB_CREATE
   end
 
-  def query( xquery, opts = {}, &block )
+  # Runs the query +xquery+, creating a query context if necessary or using
+  # +opts[:ctx]+ if passed.
+  def query( xquery, opts = {}, &block ) # :yeilds: result
     opts[:ctx] ||= create_query_context
     q = self.prepare xquery, opts[:ctx]
     res = q.execute( opts[:ctx], 0 )
@@ -196,7 +243,10 @@ class Dbxml::XmlManager
   end
 end
 
+# Wraps and extends the [http://www.sleepycat.com/xmldocs/api_cxx/env_class.html] class.
 class Db::DbEnv
+  # Convenience function to instantiate a XmlManager which attaches to
+  # this environment.
   def manager
     Dbxml::XmlManager.new self, 0
   end

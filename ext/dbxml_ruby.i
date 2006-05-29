@@ -13,8 +13,8 @@
 %alias XmlDocument::getContent "content";
 %alias XmlDocument::setContent "content=";
 
-%alias XmlQueryContext::getNamespace "get_namespace";
-%alias XmlQueryContext::setNamespace "set_namespace";
+%alias XmlQueryContext::getNamespace "namespace";
+%alias XmlQueryContext::setNamespace "namespace=";
 %alias XmlQueryContext::getDefaultCollection "collection";
 %alias XmlQueryContext::setDefaultCollection "collection=";
 
