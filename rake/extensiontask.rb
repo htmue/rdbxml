@@ -109,19 +109,23 @@ module Rake
 
     class << self
       # The default environment for all extensions.
+      @@DefaultEnv = {}
       def env
         @@DefaultEnv
       end
+      def env=(e)
+        @@DefaultEnv = e
+      end
 
+      Config::CONFIG.merge(ENV).each { |k, v| @@DefaultEnv[k.downcase.to_sym] = v }
       @@DefaultEnv = {
-        :cxx => ENV['CXX'] || 'c++',
-        :cxxflags => ENV['CXXFLAGS'] || '',
+        :cxx => 'c++',
+        :cxxflags => '',
         :c_exts => ['c'],
         :cpp_exts => ['cc', 'cxx', 'cpp'],
         :includedirs => [],
         :libdirs => [],
-      }
-      Config::CONFIG.each { |k, v| @@DefaultEnv[k.downcase.to_sym] = v }
+      }.update(@@DefaultEnv)
     end
 
   protected

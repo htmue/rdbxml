@@ -6,7 +6,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 
-GEM_VERSION = '0.6'
+GEM_VERSION = '0.6.1'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist

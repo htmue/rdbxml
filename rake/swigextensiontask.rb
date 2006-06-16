@@ -75,13 +75,13 @@ module Rake
       end
     end
 
-    ExtensionTask.env.update(
+    ExtensionTask.env = {
       :swig => 'swig',
       :swigext => 'i',
       :swig_cppext => '_wrap.cc',
       :swig_flags => ['-ruby', '-c++'],
       :swig_includedirs => ['.']
-    )
+    }.update(ExtensionTask.env)
 
   protected
 
@@ -89,10 +89,11 @@ module Rake
     def verify_swig_version
       @@swig_version ||= IO.popen "#{env[:swig]} -version 2>&1" do |swig|
         banner = swig.readlines.reject { |l| l.strip.empty? }
-        banner[0].match(/SWIG Version ([^ ]+)/i)[1]
+        banner = banner[0].match(/swig version ([^ ]+)/i)
+        banner and banner[1]
       end
-      unless @@swig_version >= '1.3'
-        raise "Need SWIG version 1.3 or later (have #{@@swig_version[0]})"
+      unless @@swig_version and @@swig_version >= '1.3'
+        raise "Need SWIG version 1.3 or later (have #{@@swig_version || 'none'})"
       end
     end
   end
