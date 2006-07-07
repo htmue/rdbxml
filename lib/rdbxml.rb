@@ -163,6 +163,12 @@ class Dbxml::XmlDocument
       while i.next  do  s += 1  end
       s
     end
+
+    def inspect
+      all = {}
+      self.each { |n, v|  all[n] = v }
+      all.inspect
+    end
   end
 
   # Returns the document metadata[http://www.sleepycat.com/xmldocs/api_cxx/XmlDocument_getMetaData.html]
@@ -183,7 +189,7 @@ class Dbxml::XmlContainer
     begin
       getDocument name.to_s
     rescue Dbxml::XmlException => ex
-      raise unless ex.err == XmlException::DOCUMENT_NOT_FOUND
+      raise unless ex.err == Dbxml::XmlException::DOCUMENT_NOT_FOUND
       nil
     end
   end
@@ -209,7 +215,7 @@ class Dbxml::XmlContainer
     begin
       putDocument doc, ctx, 0
     rescue Dbxml::XmlException => ex
-      raise unless ex.err == XmlException::UNIQUE_ERROR
+      raise unless ex.err == Dbxml::XmlException::UNIQUE_ERROR
       d = self[doc.name]
       d.content = doc.content
       updateDocument d, ctx
