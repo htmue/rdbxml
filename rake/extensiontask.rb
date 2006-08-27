@@ -79,10 +79,14 @@ module Rake
       output_objs = @objs.collect { |obj| filepath obj, :objext }
       output_lib = filepath lib_name, :dlext
 
-      task name => output_lib  do end
+      task name => output_lib
+
       file output_lib => output_objs do |t|
-        sh_cmd :ldshared, {'-L' => :libdirs}, '-o', output_lib, output_objs,
-                          {'-l' => link_libs}, :libs #, :dldlibs, :librubyarg_shared
+        sh_cmd :ldshared, :dldflags, :ldflags,
+               {'-L' => :libdirs}, '-o', output_lib,
+               output_objs.join(' '),
+               link_libs.join(' '),
+               :libs, :dldlibs, :librubyarg_shared
       end
 
       CLEAN.include output_objs
@@ -157,7 +161,7 @@ module Rake
           else
             opt.to_s
         end
-      end.join(' ')
+      end.join(' ').squeeze(' ')
     end
 
     def sh_cmd( cmd, *opts )
