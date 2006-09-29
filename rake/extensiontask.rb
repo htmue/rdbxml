@@ -2,6 +2,8 @@ require 'rake'
 require 'rake/clean'
 require 'rake/tasklib'
 
+# Rake tasks to build Ruby extensions
+
 module Rake
 
   # Create a build task that will generate a Ruby extension (e.g. .so) from one or more
@@ -69,7 +71,7 @@ module Rake
     # - link_libs: <none>
     def set_defaults
       @lib_name ||= name.to_sym
-      @objs ||= [name.to_sym]
+      @objs = [name.to_sym]  unless @objs and @objs.any?
       @dir ||= '.'
       @link_libs ||= []
     end
