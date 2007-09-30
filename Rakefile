@@ -49,7 +49,7 @@ end
 
 task :install => [:test, :clean] do end
 
-rd = Rake::RDocTask.new :rdoc do |rdoc|
+docs = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_dir = 'html'
   rdoc.title    = "RDBXML -- XML Databases for Ruby"
   rdoc.options += ['--line-numbers', '--inline-source', '--main', 'README', '--exclude', 'ext/*.c*']
@@ -59,7 +59,7 @@ rd = Rake::RDocTask.new :rdoc do |rdoc|
   rdoc.rdoc_files.include 'rake/**/*task.rb'
 end
 
-GEM_FILES = rd.rdoc_files + FileList[
+GEM_FILES = docs.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',
   'rake/**/*.rb',
@@ -83,8 +83,8 @@ spec = Gem::Specification.new do |s|
   s.require_paths << 'ext'
 
   s.has_rdoc = true
-  s.extra_rdoc_files = rd.rdoc_files.reject { |fn| fn =~ /\.rb$/ }.to_a
-  s.rdoc_options = rd.options
+  s.extra_rdoc_files = docs.rdoc_files.reject { |fn| fn =~ /\.rb$/ }.to_a
+  s.rdoc_options = docs.options
 end
 Rake::GemPackageTask.new spec  do |pkg|
   pkg.need_zip = true
