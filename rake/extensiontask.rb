@@ -84,11 +84,8 @@ module Rake
       task name => output_lib
 
       file output_lib => output_objs do |t|
-        sh_cmd :ldshared, :dldflags, :ldflags,
-               {'-L' => :libdirs}, '-o', output_lib,
-               output_objs.join(' '),
-               link_libs.join(' '),
-               :libs, :dldlibs, :librubyarg_shared
+        sh_cmd :ldshared, :dldflags, :ldflags, {'-L' => :libdirs}, '-o', output_lib, output_objs.join(' '),
+               link_libs.collect { |l| "-l#{l}" }.join(' '), :libs, :dldlibs, :librubyarg_shared
       end
 
       CLEAN.include output_objs

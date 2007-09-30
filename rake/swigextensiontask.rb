@@ -43,7 +43,8 @@ module Rake
       super
       @ifaces ||= [name.to_sym]
       @deps ||= Hash.new []
-   end
+      @objs = []
+    end
 
     def define_tasks
       for iface in @ifaces
@@ -56,7 +57,6 @@ module Rake
           file src => deps.collect { |dep| filepath(dep, :swigext) } << iface
         end
         CLEAN.include src
-
         @objs << src.sub(/\.[^.]+$/, '.'+env[:objext])
       end
       super

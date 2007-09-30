@@ -56,6 +56,8 @@ public:
 #error "Unknown SWIG target language"
 #endif
 
+// DBXML_USEOVERLOADS -- defined when a language supports overloaded
+// functions.  If defined, the "OVERLOAD_NAME" macro is a no-op
 #if defined(SWIGJAVA) || defined(SWIGPYTHON) || defined(SWIGCSHARP) || defined(SWIGTCL8) || defined(SWIGRUBY)
 #define DBXML_USEOVERLOADS
 #endif
@@ -64,7 +66,7 @@ public:
 #define DBXML_USE_RESOLVER
 #endif
 
-typedef unsigned int u_int32_t;
+ //typedef unsigned int u_int32_t;
 typedef int int32_t;
 
 class XmlManager;
@@ -82,6 +84,9 @@ class XmlModify;
 class XmlTransaction;
 class XmlMetaDataIterator;
 class XmlStatistics;
+class XmlEventReader;
+class XmlEventWriter;
+class XmlEventReaderToWriter;
 #if defined(DBXML_USE_RESOLVER)
 class XmlResolver;
 #endif
@@ -98,8 +103,9 @@ class XmlResolver;
 #ifndef SWIGJAVA
 // For Java, this is done differently
 enum {
-	DB_CREATE, DB_DIRTY_READ, DB_EXCL,
-	DB_NOMMAP, DB_RDONLY, DB_THREAD,
+	DB_CREATE, DB_READ_UNCOMMITTED, DB_DIRTY_READ,
+	DB_EXCL, DB_NOMMAP, DB_RDONLY, DB_THREAD,
+	DB_READ_COMMITTED, DB_DEGREE_2,
 	DB_INIT_LOCK, DB_INIT_LOG, DB_INIT_MPOOL, DB_INIT_TXN,
 	DB_SALVAGE, DB_AGGRESSIVE
 };
@@ -111,6 +117,12 @@ enum {
 %javaconst(1);
 #endif
 
+// This directive will turn all instances of u_int32_t in
+// this file into int for the purposes of typemaps and typing.
+// For various reaons, as of SWIG 1.3.29, this works better,
+// and should not cause any actual failures anywhere.
+%apply int {u_int32_t};
+
 //
 // see DbXmlFwd.hpp for these enums
 //
@@ -119,17 +131,18 @@ enum {
 	DBXML_ADOPT_DBENV =        0x00000001,
 	DBXML_ALLOW_EXTERNAL_ACCESS = 0x00000002,
 	DBXML_ALLOW_AUTO_OPEN    = 0x00000004,
-	DBXML_ALLOW_VALIDATION  =  0x00100000,
-	DBXML_TRANSACTIONAL =      0x00200000,
-	DBXML_REVERSE_ORDER =      0x00100000,
-	DBXML_INDEX_VALUES =       0x00200000,
-	DBXML_CACHE_DOCUMENTS =    0x00400000,
-	DBXML_CHKSUM =             0x00400000,
-	DBXML_ENCRYPT =            0x00800000,
-	DBXML_NO_INDEX_NODES =     0x10000000,
-	DBXML_GEN_NAME =           0x20000000,
-	DBXML_LAZY_DOCS =          0x40000000,
-	DBXML_INDEX_NODES =        0x80000000
+	DBXML_ALLOW_VALIDATION      = 0x00100000,
+	DBXML_TRANSACTIONAL         = 0x00200000,
+	DBXML_CHKSUM                = 0x00400000,
+	DBXML_ENCRYPT               = 0x00800000,
+	DBXML_INDEX_NODES           = 0x01000000,
+	DBXML_NO_INDEX_NODES        = 0x02000000,
+	DBXML_REVERSE_ORDER         = 0x00100000,
+	DBXML_INDEX_VALUES          = 0x00200000,
+	DBXML_CACHE_DOCUMENTS       = 0x00400000,
+	DBXML_LAZY_DOCS             = 0x00800000,
+	DBXML_WELL_FORMED_ONLY      = 0x01000000,
+	DBXML_GEN_NAME              = 0x02000000
 };
 
 // LogLevel
@@ -257,10 +270,15 @@ void setLogCategory(enum LogCategory category, bool enabled) {
 #ifndef SWIGJAVA
 %newobject XmlContainer::getDocument(const std::string&);
 %newobject XmlContainer::getDocument(XmlTransaction&, const std::string&);
+%newobject XmlContainer::getNode(const std::string&);
+%newobject XmlContainer::getNode(XmlTransaction&, const std::string&);
 #endif
 %newobject XmlContainer::getDocument(const std::string&, u_int32_t);
 %newobject XmlContainer::getDocument(XmlTransaction&, const std::string&,
 				     u_int32_t);
+%newobject XmlContainer::getNode(const std::string&, u_int32_t);
+%newobject XmlContainer::getNode(XmlTransaction&, const std::string&,
+				 u_int32_t);
 %newobject XmlContainer::getAllDocuments(u_int32_t);
 %newobject XmlContainer::getAllDocuments(XmlTransaction&, u_int32_t);
 %newobject XmlContainer::lookupIndex(XmlQueryContext &, const std::string &,
@@ -370,6 +388,7 @@ void setLogCategory(enum LogCategory category, bool enabled) {
 %newobject XmlValue::getAttributes() const;
 %newobject XmlValue::getOwnerElement() const;
 %newobject XmlValue::asBinary() const;
+%newobject XmlValue::loadNodeHandle() const;
 
 %newobject XmlIndexSpecification::find(const std::string&, const std::string&);
 %newobject XmlIndexSpecification::next();
@@ -379,6 +398,7 @@ void setLogCategory(enum LogCategory category, bool enabled) {
 #if defined(DBXML_USE_RESOLVER)
 %newobject XmlResolver::resolveSchema(XmlTransaction*, XmlManager&, const std::string&, const std::string&) const;
 %newobject XmlResolver::resolveEntity(XmlTransaction*, XmlManager&, const std::string&, const std::string&) const;
+%newobject XmlResolver::resolveModule(XmlTransaction*, XmlManager&, const std::string&, const std::string&) const;
 #endif
 
 #ifdef SWIGJAVA
@@ -403,6 +423,7 @@ OVERLOAD_NAME(XmlManagerFromEnv)
 #ifndef SWIGJAVA
 	void setDefaultContainerFlags(u_int32_t flags);
 	u_int32_t getDefaultContainerFlags();
+	u_int32_t getFlags() const;
 #endif
 	void setDefaultPageSize(u_int32_t pageSize);
 	u_int32_t getDefaultPageSize();
@@ -418,6 +439,9 @@ OVERLOAD_NAME(XmlManagerFromEnv)
 	void registerResolver(const XmlResolver &resolver);
 #endif
 
+	int getImplicitTimezone() const;
+	void setImplicitTimezone(int tz);
+
 	int existsContainer(const std::string &name);
 	void removeContainer(const std::string &name);
 OVERLOAD_NAME(removeContainerWithTxn)
@@ -428,6 +452,14 @@ OVERLOAD_NAME(renameContainerWithTxn)
 	void renameContainer(XmlTransaction &txn, const std::string &oldName,
 			     const std::string &newName);
 	void upgradeContainer(const std::string &name, XmlUpdateContext &uc);
+	void compactContainer(const std::string &name, XmlUpdateContext &uc,
+			      u_int32_t flags = 0);
+	void compactContainer(XmlTransaction &txn, const std::string &name,
+			      XmlUpdateContext &uc, u_int32_t flags = 0);
+	void truncateContainer(const std::string &name, XmlUpdateContext &uc,
+			       u_int32_t flags = 0);
+	void truncateContainer(XmlTransaction &txn, const std::string &name,
+			       XmlUpdateContext &uc, u_int32_t flags = 0);
 	void reindexContainer(const std::string &name, XmlUpdateContext &uc,
 			      u_int32_t flags = 0);
 	void reindexContainer(XmlTransaction &txn, const std::string &name,
@@ -752,6 +784,11 @@ public:
 
 };
 
+#ifdef SWIGJAVA
+%ignore putDocument(const std::string &name, XmlEventReader &reader, XmlUpdateContext &context);
+%ignore putDocument(XmlTransaction &txn, const std::string &name, XmlEventReader &reader, XmlUpdateContext &context);
+#endif
+
 class XmlContainer
 {
 public:
@@ -769,13 +806,14 @@ public:
 	void sync();
 #ifndef SWIGJAVA
 	void close();
+	u_int32_t getFlags() const;
 #endif SWIGJAVA
 
 	bool addAlias(const std::string &alias);
 	bool removeAlias(const std::string &alias);
-
+#ifndef SWIGJAVA
 	XmlManager &getManager();
-
+#endif
 	const std::string &getName() const;
 	enum XmlContainer::ContainerType getContainerType() const;
 	bool getIndexNodes() const;
@@ -838,7 +876,14 @@ OVERLOAD_NAME(replaceDefaultIndexWithTxn)
 			 u_int32_t flags = 0);
 OVERLOAD_NAME(putDocumentAsString)
 	std::string putDocument(const std::string &name, const std::string &contents,
-			 XmlUpdateContext &context, u_int32_t flags = 0);
+				XmlUpdateContext &context, u_int32_t flags = 0);
+OVERLOAD_NAME(putDocumentAsEventReader)
+        std::string putDocument(const std::string &name, XmlEventReader &reader,
+				XmlUpdateContext &context, u_int32_t flags = 0);
+OVERLOAD_NAME(putDocumentAsEventWriter)
+        XmlEventWriter &putDocumentAsEventWriter(XmlDocument &document,
+						 XmlUpdateContext &context,
+						 u_int32_t flags = 0);
 	void deleteDocument(XmlDocument &document,
 			    XmlUpdateContext &context);
 OVERLOAD_NAME(deleteDocumentByName)
@@ -868,6 +913,17 @@ OVERLOAD_NAME(putDocumentAsStringWithTxn)
 				const std::string &contents,
 				XmlUpdateContext &context,
 				u_int32_t flags = 0);
+OVERLOAD_NAME(putDocumentAsEventReaderWithTxn)
+	std::string putDocument(XmlTransaction &txn,
+				const std::string &name,
+				XmlEventReader &reader,
+				XmlUpdateContext &context,
+				u_int32_t flags = 0);
+OVERLOAD_NAME(putDocumentAsEventWriterWithTxn)
+        XmlEventWriter &putDocumentAsEventWriter(XmlTransaction &txn,
+						 XmlDocument &document,
+						 XmlUpdateContext &context,
+						 u_int32_t flags = 0);
 OVERLOAD_NAME(deleteDocumentWithTxn)
 	void deleteDocument(XmlTransaction &txn, XmlDocument &document,
 			    XmlUpdateContext &context);
@@ -907,6 +963,14 @@ OVERLOAD_NAME(getDocumentWithTxn)
 	{
 		return new XmlDocument(self->getDocument(txn, name, 0));
 	}
+	XmlValue *getNode(const std::string &name) {
+		return new XmlValue(self->getNode(name, 0));
+	}
+OVERLOAD_NAME(getNodeWithTxn)
+	XmlValue *getNode(XmlTransaction &txn, const std::string &name)
+	{
+		return new XmlValue(self->getNode(txn, name, 0));
+	}
 #endif
 OVERLOAD_NAME(getDocumentWithFlags)
 	XmlDocument *getDocument(const std::string &name, u_int32_t flags) {
@@ -917,6 +981,16 @@ OVERLOAD_NAME(getDocumentWithFlagsAndTxn)
 				 u_int32_t flags) {
 		return new XmlDocument(self->getDocument(txn, name, flags));
 	}
+OVERLOAD_NAME(getNodeWithFlags)
+	XmlValue *getNode(const std::string &name, u_int32_t flags) {
+		return new XmlValue(self->getNode(name, flags));
+	}
+OVERLOAD_NAME(getNodeWithFlagsAndTxn)
+	XmlValue *getNode(XmlTransaction &txn, const std::string &name,
+				 u_int32_t flags) {
+		return new XmlValue(self->getNode(txn, name, flags));
+	}
+
 	XmlResults *getAllDocuments(u_int32_t flags) {
 		   return new XmlResults(self->getAllDocuments(flags));
 	}
@@ -1012,6 +1086,11 @@ OVERLOAD_NAME(lookupEdgeStatisticsWithTxn)
 } /* %extend */
 };
 
+#ifdef SWIGJAVA
+%rename(setContentAsXmlInputStream_java) XmlDocument::setContentAsXmlInputStream;
+%rename(setContentAsEventReader_java) XmlDocument::setContentAsEventReader;
+#endif
+
 class XmlDocument
 {
 public:
@@ -1038,7 +1117,13 @@ OVERLOAD_NAME(setContentWithXmlData)
 	// input stream is owned by caller
 	XmlInputStream *getContentAsXmlInputStream() const;
 	// input stream is donated to callee
+
 	void setContentAsXmlInputStream(XmlInputStream *adopted);
+
+	XmlEventReader &getContentAsEventReader() const;
+	void setContentAsEventReader(XmlEventReader &reader);
+
+	void getContentAsEventWriter(XmlEventWriter &writer);
 
 	void fetchAllData();
 	void setMetaData(const std::string &uri,
@@ -1071,6 +1156,9 @@ OVERLOAD_NAME(getMetaDataAsXmlData)
 	}
 	XmlMetaDataIterator *getMetaDataIterator() const {
 		return new XmlMetaDataIterator(self->getMetaDataIterator());
+	}
+	bool equals(const XmlDocument &other) const {
+		return (*self == other);
 	}
 }
 };
@@ -1151,6 +1239,9 @@ public:
 	enum XmlQueryContext::EvaluationType getEvaluationType() const;
 	void setDefaultCollection(const std::string &uri);
 	std::string getDefaultCollection() const;
+	void interruptQuery();
+	void setQueryTimeoutSeconds(u_int32_t secs);
+	u_int32_t getQueryTimeoutSeconds() const;
 
 %extend {
 	XmlValue *getVariableValue(const std::string &name) const {
@@ -1249,7 +1340,7 @@ public:
 	bool previous(XmlValue &value);
 	bool peek(XmlValue &value);
 #endif
-
+	enum XmlQueryContext::EvaluationType getEvaluationType() const;
 OVERLOAD_NAME(nextDocument)
 	bool next(XmlDocument &document);
 OVERLOAD_NAME(previousDocument)
@@ -1360,6 +1451,8 @@ OVERLOAD_NAME(XmlValueTypedFromXmlData)
 
 	~XmlValue();
 	enum XmlValue::Type getType() const;
+	std::string getTypeURI() const;
+	std::string getTypeName() const;
 	bool isNull() const;
 	bool isType(enum XmlValue::Type type) const;
 
@@ -1389,6 +1482,8 @@ OVERLOAD_NAME(asStringEncoded)
 	}
 }
 #endif
+	XmlEventReader &asEventReader() const;
+	std::string getNodeHandle() const;
 	bool equals(const XmlValue &value) const;
 
 	std::string getNodeName() const;
@@ -1607,15 +1702,23 @@ protected:
 public:
 	virtual ~XmlResolver();
 	virtual bool resolveDocument(XmlTransaction *txn,XmlManager &mgr,
-				     const std::string &uri, XmlValue &res) const;
+				     const std::string &uri,
+				     XmlValue &reslt) const;
 	virtual bool resolveCollection(XmlTransaction *txn, XmlManager &mgr,
-				       const std::string &uri, XmlResults &res) const;
+				       const std::string &uri,
+				       XmlResults &reslt) const;
 	virtual XmlInputStream *resolveSchema(XmlTransaction *txn, XmlManager &mgr,
 					      const std::string &schemaLocation,
 					      const std::string &nameSpace) const;
 	virtual XmlInputStream *resolveEntity(XmlTransaction *txn, XmlManager &mgr,
 					      const std::string &systemId,
 					      const std::string &publicId) const;
+
+	virtual bool resolveModuleLocation(
+		XmlTransaction *txn, XmlManager &mgr,
+		const std::string &nameSpace, XmlResults &reslt) const;
+	virtual XmlInputStream *resolveModule(XmlTransaction *txn, XmlManager &mgr,
+		const std::string &moduleLocation, const std::string &nameSpace) const;
 };
 #endif
 
@@ -1640,14 +1743,29 @@ public:
 				 enum XmlModify::XmlObject type,
 				 const std::string &name,
 				 const std::string &content);
+OVERLOAD_NAME(addInsertBeforeStepWithResults)
+	void addInsertBeforeStep(const XmlQueryExpression &selectionExpr,
+				 enum XmlModify::XmlObject type,
+				 const std::string &name,
+				 XmlResults &content);
 	void addInsertAfterStep(const XmlQueryExpression &selectionExpr,
 				enum XmlModify::XmlObject type,
 				const std::string &name,
 				const std::string &content);
+OVERLOAD_NAME(addInsertAfterStepWithResults)
+	void addInsertAfterStep(const XmlQueryExpression &selectionExpr,
+				enum XmlModify::XmlObject type,
+				const std::string &name,
+				XmlResults &content);
 	void addAppendStep(const XmlQueryExpression &selectionExpr,
 			   enum XmlModify::XmlObject type,
 			   const std::string &name,
 			   const std::string &content, int location = -1);
+OVERLOAD_NAME(addAppendStepWithResults)
+	void addAppendStep(const XmlQueryExpression &selectionExpr,
+			   enum XmlModify::XmlObject type,
+			   const std::string &name,
+			   XmlResults &content, int location = -1);
 	void addUpdateStep(const XmlQueryExpression &selectionExpr,
 			   const std::string &content);
 	void addRemoveStep(const XmlQueryExpression &selectionExpr);
@@ -1705,4 +1823,137 @@ public:
 	double getNumberOfIndexedKeys() const;
 	double getNumberOfUniqueKeys() const;
 	double getSumKeyValueSize() const;
+};
+
+#ifdef SWIGJAVA
+%rename(closeInternal) XmlEventReader::close;
+#endif
+
+class XmlEventReader
+{
+public:
+	enum { // XmlEventType
+		StartElement,
+		EndElement,
+		Characters,
+		CDATA,
+		Comment,
+		Whitespace,
+		StartDocument,
+		EndDocument,
+		StartEntityReference,
+		EndEntityReference,
+		ProcessingInstruction,
+		DTD
+	};
+	~XmlEventReader();
+	void close();
+
+	void setReportEntityInfo(bool value);
+	bool getReportEntityInfo() const;
+	void setExpandEntities(bool value);
+	bool getExpandEntities() const;
+
+	enum XmlEventReader::XmlEventType next();
+	enum XmlEventReader::XmlEventType nextTag();
+
+	bool hasNext() const;
+	enum XmlEventReader::XmlEventType getEventType() const;
+
+	const unsigned char *getNamespaceURI() const;
+	const unsigned char *getLocalName() const;
+	const unsigned char *getPrefix() const;
+// avoid the by-reference length parameter for non-C++, instead
+// add an explicit call
+%extend {
+	const unsigned char *getValue() const {
+		int len;
+		return self->getValue(len);
+	}
+}
+#ifndef SWIGJAVA
+// byte length is not useful for Java.  It may not
+// be for other languages -- need to check
+%extend {
+	int getValueLength() const {
+		int len;
+		(void)self->getValue(len);
+		return len;
+	}
+}
+#endif
+
+	int getAttributeCount() const;
+	bool isAttributeSpecified(int index) const;
+	const unsigned char *getAttributeLocalName(int index) const;
+	const unsigned char *getAttributeNamespaceURI(int index) const;
+	const unsigned char *getAttributePrefix(int index) const;
+	const unsigned char *getAttributeValue(int index) const;
+
+	const unsigned char *getEncoding() const;
+	const unsigned char *getVersion() const;
+	const unsigned char *getSystemId() const;
+	bool isStandalone() const;
+	bool standaloneSet() const;
+	bool encodingSet() const;
+
+	bool hasEntityEscapeInfo() const;
+	bool needsEntityEscape(int index = 0) const;
+	bool hasEmptyElementInfo() const;
+	bool isEmptyElement() const;
+	bool isWhiteSpace() const;
+};
+
+#ifdef SWIGJAVA
+%rename(closeInternal) XmlEventWriter::close;
+#endif
+
+class XmlEventWriter
+{
+public:
+	~XmlEventWriter();
+	void close();
+
+	void writeAttribute(const unsigned char *localName,
+			    const unsigned char *prefix,
+			    const unsigned char *uri,
+			    const unsigned char *value,
+			    bool isSpecified);
+
+	void writeText(enum XmlEventReader::XmlEventType type,
+		       const unsigned char *text,
+		       int length);
+
+	void writeProcessingInstruction(const unsigned char *target,
+					const unsigned char *data);
+
+	void writeStartElement(const unsigned char *localName,
+			       const unsigned char *prefix,
+			       const unsigned char *uri,
+			       int numAttributes,
+			       bool isEmpty);
+	void writeEndElement(const unsigned char *localName,
+			     const unsigned char *prefix,
+			     const unsigned char *uri);
+
+	void writeDTD(const unsigned char *dtd, int length);
+	void writeStartDocument(const unsigned char *version,
+				const unsigned char *encoding,
+				const unsigned char *standalone);
+	void writeEndDocument();
+
+	void writeStartEntity(const unsigned char *name,
+			      bool expandedInfoFollows);
+	void writeEndEntity(const unsigned char *name);
+};
+
+class XmlEventReaderToWriter
+{
+public:
+	XmlEventReaderToWriter(XmlEventReader &reader,
+			       XmlEventWriter &writer,
+			       bool ownsReader);
+	~XmlEventReaderToWriter();
+
+	void start();
 };

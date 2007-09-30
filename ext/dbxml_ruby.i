@@ -48,11 +48,13 @@ public:
     UNKNOWN_INDEX,  ///< The indexing strategy name is unknown.
     INVALID_VALUE, ///< An invalid parameter was passed.
     VERSION_MISMATCH, ///< The container version and the dbxml library version are not compatible.
-    UNUSED_2,         ///< Placeholder
+    EVENT_ERROR, ///< Error using the event reader
     CONTAINER_NOT_FOUND, ///< The specified container could not be found
     TRANSACTION_ERROR, ///< An XmlTransaction has already been committed or aborted
     UNIQUE_ERROR, ///< A uniqueness constraint has been violated
-    NO_MEMORY_ERROR ///< An operation was unable to allocate memory
+    NO_MEMORY_ERROR, ///< Unable to allocate memory
+    OPERATION_TIMEOUT, ///< An operation timed out
+    OPERATION_INTERRUPTED ///< An operation was explicitly interrupted
   };
 
   explicit XmlException(const DbException &e, const char *file = 0, int line = 0);

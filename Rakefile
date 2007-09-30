@@ -6,7 +6,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 
-GEM_VERSION = '0.6.1'
+GEM_VERSION = '0.7'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
@@ -36,7 +36,7 @@ desc "Build the BDBXML interface extension"
 Rake::SWIGExtensionTask.new :dbxml do |t|
   t.dir = 'ext'
   t.deps[:dbxml] << :dbxml_ruby
-  t.link_libs += ['db', 'db_cxx', 'dbxml', 'xquery', 'xerces-c', 'pathan']
+  t.link_libs += ['db', 'db_cxx', 'dbxml', 'xqilla', 'xerces-c']
 end
 
 task :test => :extensions
@@ -95,5 +95,3 @@ task :default => :extensions
 task :all => :extensions
 
 load 'publish.rf' if File.exist? 'publish.rf'
-
-

@@ -38,7 +38,7 @@ class XmlValueTest < Test::Unit::TestCase
 
   def test_to_s
     assert_equal '123', XmlValue.new(123).to_s
-    assert_equal '456.789', XmlValue.new(456.789).to_s
+    assert_equal 456.789, XmlValue.new(456.789).to_s.to_f
     assert_equal 'foo', XmlValue.new('foo').to_s
   end
 

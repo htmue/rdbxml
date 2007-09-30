@@ -7,7 +7,7 @@ progress.
 
 == Requirements
 * Rake[http://rake.rubyforge.org] >= 7.0
-* Berkely DBXML[http://dev.sleepycat.com/downloads/releasehistorybdbxml.html]
+* Oracle BDB XML[http://www.oracle.com/technology/products/berkeley-db/xml/index.html]
 
 == Installation
 
@@ -17,34 +17,22 @@ RDBXML is distributed as a Ruby Gem for easy installation, e.g.
   sudo gem install rdbxml
 
 This will attempt to find the DBXML libaries/headers in the standard paths (plus
-/usr/local/) and will use the interface files taken from the dbxml-2.2.13
+/usr/local/) and will use the interface files taken from the dbxml-2.3.10
 distribution (the latest version, at the time of this writing).
 
 === The Right Way
 
 Due to tight dependencies, it's recommended that you obtain, build, and install
-the latest version of the DBXML distribution (from
-Sleepycat[http://dev.sleepycat.com/downloads/releasehistorybdbxml.html]), e.g.:
-  # fetch and extract
-  cd /tmp
-  wget http://downloads.sleepycat.com/dbxml-2.2.13.tar.gz
-  tar -xvzf dbxml-2.2.13.tar.gz
-  cd dbxml-2.2.13
-
-  # build (see DBXML docs for further instructions)
-  ./buildall.sh
-
-  # install
-  sudo cp -a /tmp/dbxml-2.2.13/install /usr/local
-  sudo ldconfig
+the latest version of the DBXML distribution from
+Oracle[http://www.oracle.com/technology/software/products/berkeley-db/xml/index.html].
 
 This will ensure that you have the correct versions of the various BDB and
 BDBXML libraries, as well as the current SWIG Interface definitions included in
 the DBXML distribution.
 
 You then pass the location of the (built) DBXML distribution to the RDBXML build
-system:
-  DBXML_DIST=/tmp/dbxml-2.2.13 sudo gem install rdbxml
+system, e.g.:
+  DBXML_DIST=/tmp/dbxml-2.3.10 sudo gem install rdbxml
 
 This will build, test, and install the RDBXML gem.
 
@@ -76,5 +64,5 @@ any issues on the RDBXML Website[http://rubyforge.org/projects/rdbxml].
 Author::    Steve Sloan (mailto:steve@finagle.org)
 Website::   http://rdbxml.rubyforge.org
 Rubyforge:: http://rubyforge.org/projects/rdbxml
-Copyright:: Copyright (c) 2006 Steve Sloan
+Copyright:: Copyright (c) 2007 Steve Sloan
 License::   MIT
