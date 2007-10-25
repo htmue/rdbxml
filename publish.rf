@@ -1,7 +1,8 @@
+#require 'rake/contrib/rubyforgepublisher'
 
+desc "Publish packages and docs to RubyForge"
 task :publish => :rerdoc  do |t|
   sh 'scp -pr html/* rforge:/var/www/gforge-projects/rdbxml'
 
-#require 'rake/contrib/rubyforgepublisher'
-#Rake::RubyForgePublisher.new 'rdbxml', 'code_monkey'
+#  Rake::RubyForgePublisher.new 'rdbxml', 'code_monkey'
 end

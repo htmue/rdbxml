@@ -6,7 +6,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 
-GEM_VERSION = '0.7'
+GEM_VERSION = '2.3.10'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
@@ -38,6 +38,7 @@ Rake::SWIGExtensionTask.new :dbxml do |t|
   t.deps[:dbxml] << :dbxml_ruby
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xqilla', 'xerces-c']
 end
+CLEAN.exclude 'ext/dbxml_wrap.cc'  # Hack for swig bug
 
 task :test => :extensions
 Rake::TestTask.new do |t|
@@ -62,6 +63,7 @@ end
 GEM_FILES = docs.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',
+  'ext/dbxml_wrap.cc',  # Hack for SWIG bug
   'rake/**/*.rb',
   'test/**/test_*.rb',
 ]
