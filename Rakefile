@@ -38,7 +38,6 @@ Rake::SWIGExtensionTask.new :dbxml do |t|
   t.deps[:dbxml] << :dbxml_ruby
   t.link_libs += ['db', 'db_cxx', 'dbxml', 'xqilla', 'xerces-c']
 end
-CLEAN.exclude 'ext/dbxml_wrap.cc'  # Hack for swig bug
 
 task :test => :extensions
 Rake::TestTask.new do |t|
@@ -63,7 +62,6 @@ end
 GEM_FILES = docs.rdoc_files + FileList[
   'Rakefile',
   'ext/**/*.i',
-  'ext/dbxml_wrap.cc',  # Hack for SWIG bug
   'rake/**/*.rb',
   'test/**/test_*.rb',
 ]
