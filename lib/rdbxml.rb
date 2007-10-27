@@ -213,7 +213,7 @@ class Dbxml::XmlContainer
   def <<( doc )
     ctx = getManager.createUpdateContext
     begin
-      putDocument doc, ctx, 0
+      putDocument doc, ctx, (doc.name.empty? ? Dbxml::DBXML_GEN_NAME : 0)
     rescue Dbxml::XmlException => ex
       raise unless ex.err == Dbxml::XmlException::UNIQUE_ERROR
       d = self[doc.name]
