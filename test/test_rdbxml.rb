@@ -2,9 +2,11 @@ require 'test/unit'
 require 'fileutils'
 require 'rdbxml'
 
+include Dbxml
+
 class XmlValueTest < Test::Unit::TestCase
   def test_new_i
-    v = XmlValue.new 123
+    v = XmlValue.new 123.0
     assert v.isNumber, v.getType
     assert !v.isString && !v.isBoolean && !v.isBinary && !v.isNode
     assert_equal v, 123
@@ -37,19 +39,19 @@ class XmlValueTest < Test::Unit::TestCase
   end
 
   def test_to_s
-    assert_equal '123', XmlValue.new(123).to_s
+    assert_equal '123', XmlValue.new(123.0).to_s
     assert_equal 456.789, XmlValue.new(456.789).to_s.to_f
     assert_equal 'foo', XmlValue.new('foo').to_s
   end
 
   def test_to_i
-    assert_equal 123, XmlValue.new(123).to_i
+    assert_equal 123, XmlValue.new(123.0).to_i
     assert_equal 456, XmlValue.new(456.789).to_i
     assert_raise(FloatDomainError) { XmlValue.new('foo').to_i }
   end
 
   def test_to_f
-    assert_equal 123.0, XmlValue.new(123).to_f
+    assert_equal 123.0, XmlValue.new(123.0).to_f
     assert_equal 456.789, XmlValue.new(456.789).to_f
     assert XmlValue.new('foo').to_f.nan?
   end
@@ -116,7 +118,7 @@ class XmlDocumentTest < Test::Unit::TestCase
     doc = @db.createDocument
     doc.name = "Test#{rand(10000)}"
     doc.content = '<test>This is a test</test>'
-    doc.meta[:foo] = 123
+    doc.meta[:foo] = 123.0
     doc.meta['bar:stuff', 'http://nowhere.invalid/namespaces/bar'] = 'Some Stuff'
     doc.meta['baaz:stuff', 'http://nowhere.invalid/namespaces/baaz'] = 'Other Stuff'
 
