@@ -17,7 +17,7 @@ RDBXML is distributed as a Ruby Gem for easy installation, e.g.
   sudo gem install rdbxml
 
 This will attempt to find the DBXML libaries/headers in the standard paths (plus
-/usr/local/) and will use the interface files taken from the dbxml-2.3.10
+/usr/local/) and will use the interface files taken from the dbxml-2.4.13
 distribution (the latest version, at the time of this writing).
 
 === The Right Way
@@ -30,9 +30,9 @@ This will ensure that you have the correct versions of the various BDB and
 BDBXML libraries, as well as the current SWIG Interface definitions included in
 the DBXML distribution.
 
-You then pass the location of the (built) DBXML distribution to the RDBXML build
+You then pass the install location of the DBXML distribution to the RDBXML build
 system, e.g.:
-  DBXML_DIST=/tmp/dbxml-2.3.10 sudo gem install rdbxml
+  sudo env DBXML_DIST=/opt/dbxml-2.4.13 gem install rdbxml
 
 This will build, test, and install the RDBXML gem.
 
