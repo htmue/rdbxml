@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-DBXML_DIST=ENV['DBXML_DIST'] || './dbxml-2.3.11'
+DBXML_DIST=ENV['DBXML_DIST'] || './dbxml-2.4.13'
 
 # Build wrapper makefile that just calls rakefile
 File.open( 'Makefile', 'w' ) do |mk|

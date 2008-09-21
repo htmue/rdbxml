@@ -7,15 +7,14 @@ require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 require 'date'
 
-GEM_VERSION = '2.3.11'
+GEM_VERSION = '2.4.13'
 
 dbxml_dist = ENV['DBXML_DIST']
 if dbxml_dist
   puts "*** Using DBXML distribution in #{dbxml_dist}"
   Rake::ExtensionTask.env.update(
-    :swig_includedirs => [File.join( dbxml_dist, 'dbxml/dist/swig' ), '.'],
-    :includedirs => File.join( dbxml_dist, 'install/include' ),
-    :libdirs => File.join( dbxml_dist, 'install/lib' )
+    :includedirs => File.join( dbxml_dist, 'include' ),
+    :libdirs => File.join( dbxml_dist, 'lib' )
   )
 else
   Rake::ExtensionTask.env.update(
