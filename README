@@ -31,8 +31,14 @@ BDBXML libraries, as well as the current SWIG Interface definitions included in
 the DBXML distribution.
 
 You then pass the install location of the DBXML distribution to the RDBXML build
-system, e.g.:
+system, e.g. (this worked on Mac OS X):
+
   sudo env DBXML_DIST=/opt/dbxml-2.4.13 gem install rdbxml
+
+You might want to pass extra flags to the compiler/linker (this worked on Linux):
+
+  sudo env CXXFLAGS=-fPIC LDFLAGS=-Wl,-rpath\ /opt/dbxml-2.4.13/lib \
+    DBXML_DIST=/opt/dbxml-2.4.13 gem install ./pkg/rdbxml-2.4.13.gem
 
 This will build, test, and install the RDBXML gem.
 
