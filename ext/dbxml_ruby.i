@@ -38,10 +38,10 @@ public:
     NULL_POINTER,     ///< null pointer exception
     INDEXER_PARSER_ERROR,  ///< XML Indexer could not parse a document.
     DATABASE_ERROR,  ///< Berkeley DB reported a database problem.
-    XPATH_PARSER_ERROR,  ///< The XPath parser was unable to parse the XPath expression.
-    DOM_PARSER_ERROR,  ///< The DOM parser was unable to parse an XML document.
-    XPATH_EVALUATION_ERROR,  ///< The XPath evaluator was unable to execute the XPath expression.
-    NO_VARIABLE_BINDING,  ///< An XPath expression referred to variable without a value.
+    QUERY_PARSER_ERROR,  ///< The XPath parser was unable to parse the XPath expression.
+/*    DOM_PARSER_ERROR,  ///< The DOM parser was unable to parse an XML document.*/
+    QUERY_EVALUATION_ERROR,  ///< The XPath evaluator was unable to execute the XPath expression.
+/*    NO_VARIABLE_BINDING,  ///< An XPath expression referred to variable without a value.*/
     LAZY_EVALUATION,  ///< XmlResults is lazily evaluated.
     DOCUMENT_NOT_FOUND,  ///< The specified document could not be found
     CONTAINER_EXISTS,  ///< The container already exists.
